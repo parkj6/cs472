@@ -1,0 +1,928 @@
+CS 472 Computer Architecture
+
+9/20/2018 (R)
+%%%%%%%%%%%%%%
+%%%SYLLABUS%%%
+%%%%%%%%%%%%%%
+
+Course content:
+	- Performance measurements
+	- Instruction set design
+	- Computer arithmetic
+	- Processor: data path and control design, pipeline design, memory system, I / O design, parallel systems
+
+Student Learning Objectives:
+	1. Use various metrics to calculate the performance of a computer system
+	2. Identify the addressing mode of instructions
+	3. Determine which hardware blocks and control lines are used for specific instructions
+	4. Demonstrate how to add and multiply integers and floating-point numbers using twos complement and IEEE floating point representation
+	5. Analyze clock periods, performance, and instruction throughput of single-cycle, multi-cycle, and pipelined implementations of a simple instruction set
+	6. Detect pipeline hazards and identify possible solutions to those hazards
+	7. Show how cache design parameters affect cache hit rate
+	8. Map a virtual address into a physical address
+	9. For ECE 572 (or aggressive undergraduate): Extra project of: Parallel programming assignment
+
+submit hw on teach, demo with TA
+1 hw allowed late (2 days)
+all hw required to pass
+
+quiz: 8%
+Assignment: 42%
+Midterm: 20%
+Final Project: 30%
+
+Textbook: Computer Organization and Design: The Hardware/Software Interface (5th)
+David Patterson & John Hennessy (2014)
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%%Lecture 1: History%%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+The Computer Revolution
+	Progress in Computer Technology
+		underpinned by Moore's Law
+	Makes novel applications feasable
+		cars, cellphones, human genome project, www, search engines
+	Computer are pervasive
+	
+Classes of computers
+	Personal Computers
+	Servers
+	Supercomputers
+	Embedded
+	Personal Mobile Devices (PMD)
+	Cloud computing
+		Warehouse Scale Computers (WSC)
+		Software as a Service (SaaS)
+	
+	Shift to RISC architecture is because of cost of RAM is cheaper and it's faster than CISC
+		
+Understanding Performance
+	Algorithm 
+		Determines number of operations executed
+	Programming Language, compiler, architecture
+		Determines number of machine instructions executed per operations.
+	Processor and memory system
+		Determine how fast instructions are executed.
+	I/O system (hardware and OS)
+		Determines how fast I/O operations are executed.
+		
+8 Great Ideas
+	1. Moore's Law (Design)
+		Intel's tic-tok approach
+	2. Abstraction (Simplify Design)
+		multi-threaded cores
+	3. Common Case Fast
+	4. Parallelism (Performance)
+		single-core isn't a thing anymore
+	5. Pipelining (Performance)
+		Conveyer Belt Pizza
+	6. Prediction (Performance)
+		CPU starts executing codes before the results are made becuase it predicted the result.
+	7. Hierarchy (of memories)
+		register - RAM - SSD in that order
+		caching systems.
+	8. Dependability (redundancy)
+		ECC memory (have more than it says it have)
+	
+Below the programming
+	Application Software
+		High-level programming languages
+	Systems Software
+	Hardware
+
+	
+Inside the Processor
+
+Abstractions
+	Abstractions help with complexity
+		Hide Lower-level detail
+	Instruction set architecture (ISA)
+		The hardware/software interface.
+	Application binary interface (ABI)
+		
+		
+Technology Trends - Relative performance / cost
+	1951 Vacuum Tube 					- 1
+	1965 Transistor (Switch)			- 35
+	1975 Integrated Circuit (IC) 		- 900
+	1995 Very large scale IC (VLSI) 	- 2.4M
+	2013 Ultra large Scale IC			- 250B
+
+Items to consider
+	Response Time
+	Throughput
+		total work done per unit time
+	How are respone time and throughput affected by:
+		Replacing or adding more processors
+		
+Relative Performance
+	Define Performance = 1/Execution Time
+	"X is n times faster than Y"
+	
+	
+	
+Measuring Execution Time
+	Elapsed Time
+		Total Response time, including all espects
+		Determines system performance
+	CPU Time	Time spent processing a given time.
+	
+
+CPU Clocking
+	Operation of digital hardware governed by a constant-rate clock
+		(rising edge, falling edge)
+	* Clock period: duration of a clock cycle
+		"How much time do i have to finish before the next cycle starts"
+		e.g. 250ps = 0.25ns = 250 x 10^-12s
+	* Clock frequency (rate): Cycles per Second
+		e.g. 4.0GHz = 4000MHz = 4.0 x 10 ^9 Hz
+	CPU Time = CPU Clock Cycles x Clock Cycle Time
+			 = CPU Clock Cycles / Clock Rate
+	Improve Performance by:
+		Reducing number of clock cycles
+		Increasing clock rate
+	Clock Cycles = Instruction Count x Cycles per Instruction
+	CPU Time = Instruciton Count x CPI x Clock Cycle Time
+			 = Instruciton Count x CPI / Clock Rate
+	Instruction Count for a Programming	
+		Determined by programm ISA and compiler
+			 
+		
+	
+Performance Summary
+	CPU Time = Instructions/Program * Clock cycles/Instruction * Seconds/Clock cycle
+	
+	Performance depends on (all affects IC):
+		Algorithm: affects IC, possibly CPI
+		Programming language: affects IC, CPI
+		Compiler: affects IC, possibly CPI
+		Instruciton set architecture: IC, CPI, Tc
+	
+"Power Wall": Single CPU perspective, use multiple cores to solve that problem. (ch 1.7)
+
+Using two's compliment, what is the 12bit binary representation of -27?
+	27: 0b11011
+	27: 0b0000 0001 1011
+	comp: 0b1111 1110 0101
+	
+"Hot spots on today’s processors can reach power densities of 1 kilowatt per square centimeter, much higher than the heat inside a rocket nozzle." - https://spectrum.ieee.org/computing/hardware/four-new-ways-to-chill-computer-chips
+	
+	
+Multiprocessors
+	- Multicore microprocessors
+	- Requires explicitly parallel programming
+	
+	
+Pitfall: Amdahl's Law
+	Improving an aspect of computer and expecting a proportional improvement in overall performance.
+	
+	T_(improved) = T_(affected) / (Improvement factor) + T_(unaffected)
+
+example: multiply accounts for 80s/100s
+		how much improvement in multiply performance to get 5x overall?
+		
+		20 = 80/n + 20 (impossible)
+
+Fallacy: Low Power at Idle		
+	Example: i7 power benchmark
+		100% load: 258W
+		50% load: 170W (66%)
+		10% load: 121W (47%)
+	example: Google data center
+		mostly operates at 10% and 50% load
+		1% of the time: 100%
+	consider designing processors to proportional to power load. 
+	
+MIPS: Million of Instruciton Per Second
+	Doesn't account for the differences between:
+		ISAs between computers
+		complexity between instructions.
+		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Ch 2: Instructions: Language of the Computer %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+Instruction Set
+	- Different computers with different instruction sets with many aspects in common. 
+	- Early computer: simpler instruction sets (simplified)
+	
+The MIPS Instruction Set
+	Standford MIPS commercialized by MIPS technologies
+	Large share of embedded core
+	Typical of many modern ISAs
+		MIPS Referance data card, Appendix B,E
+	32 registers
+	
+		
+Arithmetic Operation
+	Add and subtract 3 operands
+	Dest, src, src,
+	ADD a, b, c #a gets b+c
+	
+	
+	"simplicity favors regularity"
+
+C code:
+	f = (g + h) - (i +j);
+MIPS:
+	add t0, $s1, $s2 # temp t0 = g + h
+	##add t0, g, h # temp t0 = g + h
+	add t1, i, j # temp t1 = i + j
+	sub f, t0, t1 # f = t0 - t1
+	
+Register Operands:
+	Arithmetic instructions use register operands
+	MIPS has a 32 * 32-bit register file
+		- used for freq used data (0-31)
+		- 32bit data called a "word"
+	Assembler names
+		$t0, $t1, ..., $t9 for temp values
+		$s0, $s0, ..., $s for saved variables
+	
+Memory Operands:
+	Main memory used for composite data
+		Arrays, structures, dynamic data
+	To apply arithmetic operations:
+		load values from mem -> register
+		store reg -> memory
+	memory is byte addressed 
+		each address identifies an 8bit byte
+	words are aligned in memory
+		address must be a multiple of 4
+	MIPS is BIG Endian
+		Big E: Most-significant byte at least address of a word
+			Bytes:	|A|B|C|D|
+			Addr:	 1 2 3 4
+		Little E: least-significant byte at least address. 
+			Bytes: 	|D|C|B|A|
+			Addr:	 1 2 3 4 
+
+Memory Operands example:
+	c code:
+		A[12] = h + A[8]
+		g in $s1, 
+		h in $s2
+		base address of A in $s3
+	MIPS:
+		#Index 8 requires offset of 32
+		lw $t0, 32($s3) 	#load word 32=offset
+		add $s1, $s2, $t0
+		sw $t0, 48($s3)		#store word 48=offset
+	
+	
+Registers vs. Memory
+	Registers are faster to access
+	Operating on memory data requires loads and stores
+	Compiler must use registers for variable as much as possible
+		Only spill to memory for less frequently used variable
+		
+Immediate Operands
+	Constant data specified in an instruction
+	
+	addi $s3, $s3, 4		# add 4 to s3
+	addi $s2, $s1, -1		# subtract 1 to s3
+	
+	Design Principle 3: make the common case fast
+		small constants are common
+		immediate operands avoids a load instruction.
+		
+Constant Zero
+	MIPS register 0 ($zero) is the constant 0
+		cannnot be overwritten
+	Useful for common operations
+		add  $t2, $s1, $zero # move between registers.
+		
+Unsigned Binary Integers:
+	Range: -2^(n-1) to 2^(n-1)-1
+			-2,147,
+	
+
+	
+2s-compliment Signed Integers
+	Bit 31
+	
+in x86, it operates mem-reg because only 4 gen purpose registers exists (eax, ebx, ecx, edx)	
+
+	
+*********************************************************************	
+gcc -S (saves the files into assembly before creating executable).
+mips64-linux-gnu-gcc (saves the mips assembly)
+optimization off
+*********************************************************************
+	
+	
+2018/09/27
+
+Signed Negation
+	Complement and add 1 (flip 0/1)
+	x + ~x = -1
+	
+
+Assembler Pseudo instructions
+	Most assembler instructions represent machine instructions 1:1
+	
+	move $t0, $t1 -> add $t0, $zero, $t1
+	
+
+	
+	
+Signed vs Unsigned
+	signed comparison: slt, slti
+	unsigned comparison: sltu, sltui
+	example:
+		$s0 = 1111 1111 1111 1111 1111 1111 1111 1111
+		$s1 = 0000 0000 0000 0000 0000 0000 0000 0001
+		slt $t0, $s0, $s1 #signed
+			-1 < +1 -> $t0=1
+		sltu $t0, $s0, $s1 #unsigned
+			+4294.........
+			
+			
+			
+Assembly Review
+	when you call a function, the variable is stored on register or on the stack.
+	
+	everything that access memory has to come from register (MIPS)
+	
+	0x000 (lowest address) 		|			|
+			^					|			|
+			|			$FP ->	|			| frame pointer points at stack
+			|					|			|
+			|			$SP ->	|___________|
+			|					|   stack	|
+	0xFFF (Highest address)		|___________|
+	
+	
+IEEE Floating-Point Format
+	Single 8bits		single 23bits
+	Double 11bits		double 52bits
+	
+	x=(-1)^s * (1+ Fraction) * 2^(exponent-bias)
+	
+	bias = 127 (single) or 1023 (double)
+	
+	
+################################################
+Procedure Calling for all architecture
+	1. Place parameters in registers
+	2. Transfer control to procedure
+	3. Acquire storage for procedure
+	4. Perform procedure's operations
+	5. Place result in register for caller
+	6. Return to place of call
+################################################
+	
+10/04/2018
+
+add instruction uses 1 dest reg, 2 src registers.
+addi can use 1 dest reg, 1 src reg, user input number.
+
+Non-Leaf Procedure 
+	- Procedure that call other procedures.
+	
+	
+Local Data on the Stack
+	- Local data allocated by callee.
+		e.g. C automatic variables.
+	- Procedure frame (activation record)
+		used by some compilers to manage stack storage. 
+	(no delete, just removes the pointer. New info is written on stack)
+
+Memory Layout
+	Text: program code
+	Static Data: global variables 
+		(in C: static variables, constant arrays, and strings).
+		$gp initialized to address allowing +-offsets into this segment.
+	Dynamic Data: Heap
+		(malloc in C, new in Java)
+	Stack: automatic Storage.
+
+Character Data
+	Byte-encoded character sets
+		ASCII: 128 characters
+			95graphic, 33 control.
+		Latin-1: 256 characters
+			ASCII, +96 more graphic characters
+	Unicode: 32bit character sets
+		used in Java, C++ wide characters
+			UTF-8, UTF-16: variable-length encodings.
+			
+		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Chapter 5: Large and Fast: %%%%%
+%%%%% Exploitng Memory Hierarchy %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Principle of Locality
+	Programs access a small proportion of their address space at any time
+	Temporal locality
+		Items accessed recently are likely to be accessed again soon.
+		e.g. instructions in a loop, induction variables.
+	Spatial locality
+		Items NEAR  those accessed recently are likely to be accessed again soon.
+		borrowing a book from the library and related subject.
+		e.g. sequential istruction access, arrar data.
+		
+	L1, L2, L3 cache
+	
+
+Taking Advantage of Locality
+
+Memory Hierarchy Levels
+	Block (aka line): unit of copying
+	If accessed data is present in upper level
+		Hit: access satisfied by upper level
+	If accessed data is absent
+		Miss: Block copied from lower level
+			Time Taken: miss penalty
+	Hit: accessed info successful. 
+	Hit ratio: hits/accesses
+	Miss Ratio: Misses / accesses = 1 - hit ratio
+
+
+		processor
+			^
+			V
+		||||*||||||||||
+		|||||||||||||||  <-upper level
+		||||||||||||||| 
+		
+		||||||||||||||||||||||||
+		||||||||||||||||||||||||
+		||||||||||||||||||||||||
+		||||||||||||||||||*|||||  <- lower level
+		||||||||||||||||||||||||
+		
+
+Memory Technology
+	Static RAM (SRAM)
+		SRAM is on the diode in the processor
+		$2000 - $5000 /GB
+		0.5ns - 2.5ns
+		Keeps its value indefinitely (with power - volitile) 
+	
+	Dynamic RAM (DRAM)
+		$6 - $25 /GB
+		50ns - 70ns
+		"Leaks" and must be refreshed (volitile)
+		Data Stored as a charge in a capacitor
+			Single transistor used to access the charge
+			Must periodically be refreshed
+				Read contents and write back
+				Performed on a DRAM "row"
+			4096 bits * 4096 bits in a single banks
+			buffer between Act and Pre 
+		ECC Memory (Error Control Checking)
+	
+	Magnetic disk
+		$0.02 - $1.00 /GB
+		5ms - 20ms
+	
+Advanced DRAM Organization
+	Bits in a DRAM are organized as rectangular arrays
+
+	Double Data Rate (DDR) DRAM
+		Transfer (writing) on rising and falling clock edges. 
+	Quad Data Rate (QDR) DRAM
+		Separate DDR input and outputs.
+	DDR4 speed > DDR3 speed. (1.2v vs 1.5v)
+
+
+Disk Sectors and Access
+	Each sector records
+		Sector ID
+		Data (512 bytes, 4096 bytes proposed)
+		Error correcting code (ECC)
+			used to hide defects and recording errors
+		
+
+
+
+	
+10/9/2018 Tues
+Caching
+
+Principle of Locality
+	Programs access a small portion of their address space at any time
+	Temporal locality
+	Spatial locality
+	
+	
+Disk Performance Issues
+Manufactureers 
+
+Cache Memory
+
+
+Example: Larger Block Size (64 blocks, 16 bytes/block)
+	To what block number does address 1200 map?
+	Block address = 1200/16 (bytes/block) = 75
+	Block number = 75 % 64 = 11
+	
+	31-10 Tag (22bits)
+	9-4 Index (6bits)
+	3-0 Offset (4bits)
+	
+Block Size Considerations
+	Larger blocks should reduce miss rate (spatial locality)
+	But in a fixed-sized cache
+		Larger blocks => fewer of them (pollution)
+			more competition => increased missed rate
+	Larger miss penalty
+		Can override the benefit of reduced miss rate
+		Early restart and critical-word-first can help. 
+		When you miss 2 block, only fetch 2 block. if you miss 16 block, need all 16.
+
+	
+Cache Misses
+	On cache hit, CPU proceeds normally
+	On cache miss
+		Stall the CPU pipeline
+		
+Write-Through
+	On data-write hit, could just update the block in cache (also update memory)
+		But then cahce and memory would be inconsistenct
+		Write takes longer (because of memory update)
+		
+Write-back (alternative to Write-Through)
+	Alternative: on data-write hit, just update the block in cache
+		keep track of whether each block is dirty
+		
+		
+Write Allocation
+	What should happen on a write miss?
+	Alternatives for write-through
+		Allocate on miss: fetch the block
+		write around: don't fetch the block. 
+			initialization writes a whole block before reading it. 
+	For write-back
+		usually fetch the block
+	
+	
+	
+Example: Intrinsity FastMATH
+	Embedded MIPS processor
+		12 stage pipeline
+		Instructions and data access on each cycle
+	Split cache: I-cache (instruction) D-cache (data)
+		each 16KB: 256blocks * 16 words/block
+		D-cache: write-through or write-back.
+		Need more reads on I-cache than D-cache. 
+	Mux = switch on which data to read out (32bit)
+	
+	
+Main Memory Supporting Cache
+	Use DRAMs for main Memory
+		Fixed width (eg. 1 word)
+		Connected by fixed-width clocked bus (usually slower than CPU clock)
+	Example: clock block read
+		1 bus cycle for address transfer
+		15 bus cycle per DRAM access
+		1 bus cycle per data transfer
+		With 4-word block, 1-word-wide DRAM
+			Miss penalty = 1 + 4*15 + 4x1 = 65 bus cycles
+			Bandwidth = 16b / 65 cycles = 0.25 B/cycle
+			
+Measuring Cache performance
+	CPU Time:
+		Program execution cycle (includes cache hit time)
+		Memory stall cycles (mostly cache misses)
+		
+Memory Stall cycles 
+= (memory access / program) x miss rate x miss penalty
+= (instructions / program) x (misses / instruction)	x miss penalty
+	example:
+	I-cache miss rate: 2%
+	D-cache miss rate: 4%
+	Miss penalty: 100 cycles
+	Base CPI (ideal cache) = 2
+	Load & stores: 36% of instructions
+	
+	I-cache misses: 0.02 x 100 = 2 cycles / instructions
+	D-cache misses: 0.36 x 0.04 x 100 = 1.44 cycles / instructions
+	Actual CPI = 2 (base) + 2 (I miss) + 1.44 (D miss) = 5.44
+		Ideal CPU = 5.44/2 = 2.72 times faster. 
+	
+	
+Associate Caches
+	Fully Associative
+		Allow a given block to go in any cache entry
+		Requires all entries to be searched at once
+		comparater per entry (expensive) 
+	n-way set associative
+		Each set contains n entries
+		Block number determines which set
+			(block number) % (# sets in cache)
+			in 2 way, even data on set 0, odd data on set 1
+		search all entries in a given set at once.
+		n-comparitors (less expensive)
+	
+Direct mapped: #block 
+Set associative: #blocks / n = #sets
+Fully associate: #blocks / #blocks = all access @ same time.
+
+Replacement Policy
+	Direct Mapped: once and done. 
+	Set Associative
+		Perfer non-valid entry (if possible)
+		or choose among entries in the set
+	Least recently used (LRU)
+		Choose 1 unused for the longest time.
+			2-way: simple
+			4-way: managable
+			n>4-way: too complicated.
+	Random
+		Give approx
+
+
+_____	  0 - 31		DRAM
+|CPU|  <-----/---->  ___________
+|___|				| Constants	|
+					|___________|
+					|  .text   	|
+					|___________|
+					|	HEAP   	| (malloc here)
+					|____|______|
+					|	 V	   	|
+					|		   	|
+					|		   	|
+					|		   	|
+					|		   	|
+					|	  ^	   	|
+					|_____|_____|
+					|   Stack	|
+					|___________|
+					
+					
+					""|heap (malloc)
+
+					
+					
+Virtual Memory
+	CPU - Translation (need security but also speed) - physical mapping to memory or hdd.
+
+Addresss Translation
+	usually have fixed-sized pages (e.g. 4096b)
+	Modern hardware could have 128Mb pages.
+	every program has their own stack of heap (accessing other program = seg fault).
+	
+Avoid SWAP space as much as possible because it's slower than physical memory (only used as overflow once RAM is full)
+
+Least Recently Used (LRU) replacement reduces page faults.
+	Referance bit (use bit) in PTE set to 1 on access to page. 
+	Periodically cleared to 0 by os when not used recently.
+	
+Writing disk is done in sectors.
+	dirty bit in PTE set when page is written. 
+	write back > write through
+	
+TLB (really fast cache, used to handle page table entries)
+Translation Look-aside Buffer. 
+	if page in memory,
+		load from PTE and retry
+		
+
+
+
+
+Cashe Design Trade-offs. 
+
+Increase Cache size:
+	- Decrease capacity misses
+	- May increase access time
+Increase Associativity
+	- Decrease conflict misses
+	- 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%			
+	test materials 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	
+sram takes more space 
+dram uses 1 transister / capacitor (leaks -> needs to be refreshed).
+refresh = 5% of access time?
+memory operands 
+review 2-s complement
+on mips code: register on left, memory address on right
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%   Chapter 4   %%%%%%%%
+%%%%%%%% The Processor %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+CPU performance factors
+	Instruction count
+	CPI and Cycle time
+
+PC = Program Counter (glorified pointer) - points to the current instructions - instruction memory, fetch instructions
+Register numbers -> register file, read registers
+
+flip-flps: elements that allows you to have some 
+	MUX (multiplexer - boolean logic)
+		"case statements"
+
+Sequential Elements:
+	Register: stores data in a circuit
+	
+
+Instruction Fetch
+	Wire:(1 high, 2 low) = 0b100 = 4 
+ 
+Jump vs Branch
+	Jump cant jump as far
+	PC - Add - Add(ALU result, used to j/br here)
+
+opcode = instruction [31-26]
+	
+
+shamt: shift amount
+	dont need 32 bits so use them for something else. 
+
+
+
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%     MIPS PIPELINE      %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Five Stages of 
+	1. IF: 	Instruction FETCH from memory
+	2. ID: 	Instruction DECODE & register read
+	3. EX: 	EXECUTE operation or calculate address
+		ALU
+	4. MEM: Access MEMORY operands
+		RAM
+	5. WB: 	WRITE result back to register.
+
+example:
+	Fetch 	-> Decode	-> Execute...
+	10ns	-> 15ns		-> 50ns		= minimum 75ns (worst case - single-core).
+	50ns	-> 50ns		-> 50ns 	
+
+Pipeline Speedup
+	If all stages are balanced:
+		time between instructions (pipelined)
+		= time between instructions (non-pipelined) / # of stages.
+Pipeline and ISA Design
+	All instructions are 32bits
+		RISC > CISC
+			CISC has (x86) 1 - 17-byte instructions. 
+			But they dont always use it.
+		easier to fetch and decode in one cycle.
+	Few and regular
+		
+Pipeline Hazard
+	Situation that prevent starting the next instruction in the next cycle.
+	1. Structure
+		A required resource is busy (w/r)
+		Conflicts for use of a resource
+		In MIPS pipeline with a single memory
+			Load/store requires data access
+			instruction fetch would have to stall for that cycle (pipeline "bubble")
+	2. Data 
+		Need to wait for previous instruction to complete its data read/write.
+		Intel's x86 can do out-of-order execution (a=b+c; d=a+e <- A is not ready yet. )
+
+		Fix1: Forwarding (aka Bypassing)
+			Use result when it is computed
+				Dont wait for it to be register
+				requires extra connections in the datapath.
+				
+		Load-Use Data Hazard
+			Can't always avoid stalls by forwarding if value not computed when needed.
+			load everything first, then do math.
+	3. Control
+		Deciding on control action depends on previous instruction.
+		Branch determines flow of control
+			fetching next instruction depends on branch outcome. 
+			Pipline can't always fetch correct instruciton
+				still working on ID stage of branch.
+		In MIPS pipeline
+			Need to compare registers and computer target early in the pipeline
+			Add hardware to do it in ID stage. 
+
+
+
+
+Pipeline registers
+	Taking snapshots between stages that was taken before.
+	half the clock cycle are write (shaded left) and half read (shaded right)
+		rising (write), falling (read) edge
+
+
+
+		
+Branch Prediction
+	Some Branch design gets 20+ prediction to optimize branches.
+	Pipeline improve performance by increasing instruction throughput
+		
+2-bit predictor
+	Only change prediction on two successive mispredictions.
+	
+slow & long || fast and faster clock cycle?
+		
+MESI coherence Protocol
+	M: Modified
+		No copies in other caches
+		memory is stale
+	E: Exclusive
+		no copies in other caches
+		memory is up-to-date
+	S: Shared
+		Un modified copies may exists
+		memory is up-to-date
+	I: Invalid		
+		Not In Cache
+		
+		
+blocking: pause on execution
+		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	Process vs Thread
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Process:
+	- Your program managed by the os
+	- Personal address spsace
+	- Can run on its own
+	- Can havve multiple threads
+
+Threads:
+	- Subdivision of process.
+	- share parts of the memory
+	- Linux (Prossess = Thread), Windows (Threads)
+	- has its own stack, registers, program counter
+
+Source: https://howtodoinjava.com/java/multi-threading/concurrency-vs-parallelism/
+	
+Concurrency:
+	Working on multiple tasks
+	"multiple tasks which start, run, and complete in overlapping time periods, in no specific order."
+	"dealing with lots of things at once."
+	
+	core0:  | A | B | A | B | A
+			_____<- time spent on execution.	
+				^ thread(A) reads a file
+					^ file is now available.
+	
+Parallel Operation:
+	Working on multiple tasks simultaneously.
+	"multiple tasks OR several part of a unique task literally run at the same time, e.g. on a multi-core processor."
+	"doing a lot of things at once."
+	core0: | A | ...
+	core1: | B | ...
+		
+Sharing informations across threads:
+	- Sharing access is problematic
+	- you need some way to indicate ownership
+		- mutex (onep processes at a time) (let c++ take)
+		- atomic reads or writes
+		
+		
+	vector (c++ in final project)
+		
+Cashe Structure:
+			Main
+			 |
+		Cache controller	
+		/	  |    |	\
+	  set	set	  set    set
+						/	\
+					block	block
+					/
+					- isDirty
+					- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
