@@ -45,7 +45,7 @@ char* isNumber(char numb[]){
 	if (numb[0] == '-')
 		i=1;
 	for (; numb[i]!=0; ++i){
-		if(!isdigit(numb[i])){
+		if(isdigit(numb[i])==1){
 			return "Is NOT a number";
 			exit(1);
 		}
