@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="J:\finalproj\src\CacheSimulator.cpp" />
+    <ClCompile Include="J:\finalproj\src\CacheController.cpp">
+      <Filter>Cache Building Blocks</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="J:\finalproj\src\CacheSimulator.h" />
+    <ClInclude Include="J:\finalproj\src\CacheController.h">
+      <Filter>Cache Building Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="J:\finalproj\src\CacheStuff.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Cache Building Blocks">
+      <UniqueIdentifier>{5c7cc314-d899-4748-b71b-a990ab632af4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

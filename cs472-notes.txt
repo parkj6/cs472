@@ -898,31 +898,297 @@ Cashe Structure:
 					- 
 
 
+Thread level parallelism
+	have multiple program counters
+	uses mimd model (!=simd)
+	targeted for tightly-coupled shared-memory multiprocessors
+	
+	for n processors, need n threads
+	
+	amount of computation assigned to each thread = grain size
+		threads can be used for data-level parallelism but overhead might ...
+		
+		
+Type:
+	Symmetric multiprocessors (SMP)
+		small number of cores
+		share single memory with uniform memory latency.
+	Distributed shared memory (DSM)
+		memory distribured among processors
+		non-uniform memory access/latency (NUMA)
+		processors connected via direct (switched) and non-direct (multi-hop) interconnection networks.
+
+cache coherence
+	coherence
+		all reads by any processor must return the most recently written value.
+		writes to the same location by any 2 processors are seen in the same order by all proyepcessorscessors
+	coherence cache provides:
+		migration: movement of data
+		replication: multiple copies of data
+	consistency (harder)
+		directly based
+			shared status of each block kept in one location
+		snooping
+			each core tracks sharing statstus of each block.
+			wrutue ubvat=kuda'yo
+
+if you have problem, throw more memory, if that doesnt work, throw more hardware
 
 
 
 
 
+11/20/2018
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%	Data-level Parallelism	%% 
+%%	in Vector, SIMD, and	%%
+%%	GPU Architectures		%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Single instruction multiple data (SIMD)
+multiple instruciton multiple data (MIMD)
+SIMD > MIMD (energy efficient)
+	only need to fetch one instruciton per operation
+	makes SIMD attractive for personal mobile devices
+	
+SIMD Parallelism
+Vecture Architectures
+	Basic Idea:
+		Read sets of data elements into "vector registers"
+		Operate on those registers (x4 registers)
+		Disperse the result back into memory.
+	Registers are controlled by compiler
+		Used to hide memory latency
+		Leverage memory bandwidth
+	Sample Vector Architecture (add-on for existing processor)
+	Main Memory <- Vecture ld/st (only 1) -> vector registers / or scalar registers -> FP add/sub/mult/div/integer/logical
+
+	VMIPS: 
+		Loosely based on Cray-1
+		Vector Registers
+			Each register holds 64-elements. 64bit/element vector
+			Register files have 16 read, 8 write ports.
+		Vector functional units
+			Fully pipelined
+			Data and control hazards are detected
+		Vectore load-store unit
+			Fully pipelined
+			One word per clock cycle after initial latency.
+		Scalar registers
+			32 general-purpose registers
+			32 floating-point registers.
+		Instructions:
+			ADDVV.D: add two vectors
+			ADDVS.D: add vectors to a scalor
+			LV/SV: vector store/load from address.
+			Example: DAXPY
+				L.D		F0, a			; load scalar a
+				LV		V1, Rx			; load vector X
+				MULVS.D	V2, V1, F0		; vector-scalar multiply
+				LV		V3, Ry			; load vector Y
+				ADDVV	V4, V2, V3		; add
+				SV		Ry, V4			; store the result
+				;;requires 6 instructions vs alomst 600 for MIPS
+	
+	Vector Execution Time:
+		Execution time depends on 3 factors:
+			length of operand vectors
+			structural hazzards
+			data dependencies
+		VMIPS functional units consume one element per clock cycle
+			execution time is approximately the vector length (not a lot of advantage)
+		Convoy
+			set of vector instrucitons that could potentially execute together.
+	Chimes:
+		Sequences with read-after-write dependency hazzards can be in the same convoy by tahninf 
+		Chaining - Allows vectore operation to start as soon as the invividiual elements of its vectore source operand become available
+		Chime:
+			Unit of time to execute 1 convey
+			m conveys executes in m vhimes
+			for vectore length of n, requires m * n clock cycles`
+			e.g.:
+				3 chimes, 2 FP ops per result, cycles per FLOP = 1.5
+				for 64 element vectors, requires 64 x3 = 192 clock cycles.
+				
+	Challenges:
+		Start up time:
+			latency of vectore functional unit.
+			Assume the same as Cray-1
+				Floating-Point add => 6 clock cycles
+				floating-point multiply: 7 clock cycles
+		Improvements:
+			> 1 elements per clock cycle
+			non-64 wide vectors
+				use Vector Length Register (VLR)
+				Allows users indicate number of elements on which to operate
+			IF statements in vectore code
+			Memory system optimizations to support vector processors
+			multiple dimentional matrices
+			sparse matrices
+			programming a vector computer.
+
+	Multiple Lanes:
+		Element n of vector register A is "hardwired" to element n of vector register B
+			Allows for multiple hardware lanes.
+			
+	Vector Mask Registers:
+		#code Consider:
+		for (i = 0; i<64; i++)
+			if (X[i] !=0)
+				X[i] = X[i]-Y[i];
+		Use Vector mask register to "disable" elements:
+	vc>	LV		V1, Rx
+		LV		V2, Ry
+	sc>	L.D		F0,#0
+		SNEVS.D		
+	
+	Memory Banks
+		Memory system must be designed to support high bandwidth for vector loads and stores
+		Spread accesses across multiple banks
+			Control bank addresses independently
+			Load or store non-sequential words
+			support multiple vector processors sharing the same memory
+		#eg:
+			32 processors. each generating 4 loads, 2 stores/cycle
+			Processor cycle time is 2.167 ns, SRAM cycle time is 15ns
+			How many memory banks are needed?
+				32 * (4+2) = 192 memory references/cycle
+				SRAM is busy for (15ns/2.167ns) = ~ 7 clock cycles
+				7 * 192 = 1344 banks.
+	
+	Stride (non-adjacent elements)
+		#code consider:
+		for(i=0; i<100; i++)
+			for(j=0; j<100; j=j++){
+				A[i][j] = 0.0;
+				for(k=0; k<100; k++)
+					A[i][j] = A[i][j] + B[i][k] * D[k][j];
+			}
+		Must utilize multiplecation of rows of B with columns of D
+		use non-unit stride
+		Bank conflict (stall) occurs when the same bank is hit faster than bank busy time:
+			#banks / LCM(stride,#banks) < bank busy time.
+	
+	Scatter-Gather (sparse matrices)
+		#code consider:
+		for (i=0;i<n;i++)
+			A[K[i]] A[K[i]] +C[M[i]];
+			
+			
+		[1 2 3
+		 4 5 6]
+		
+		[1 2 3 0 0
+		 0 0 1 0 0
+		 0 0 0 1 0
+		 1 0 0 0 1]
+			
+		Use index vector:
+		LV		Vk, Rk		; load K
+		LVI		Va, (Ra+Vk)	; load A[K[]]
+		LV		Vm, Rm		; load M
+		LVI		Vc, (Rc+Vm)	; load C[M[]]
+		ADDVV.D	Va, Va, Vc	; add them
+		SVI		(Ra+Va)
+		;; improves ld/st speed rather than math speed (already fast).
+	
+	Programming Vector Architectures
+		Compilers can provide feedback to programmers
+		Programmers can provide hints to compilers
+			[Benchmark]
+			[Operations executed in vector mode, compiler-optimized]
+			[Operations executed in vector mode, with programmer aid]
+			[Speedup from hint optimization]
+	
+	SIMD extentions
+		Media applications operate on data types narrorwer than the native word size
+		(eg): disconnect carry chains to "partition" adder
+		Limitations, compared to vector instructions
+			number of data operands encoded into op code
+			no sophisticated addressing modes (strided, scatter-gather)
+	SIMD implementations:
+		Intel MMX
+	
+	
+	Graphics Processor Units
+	x86 processors:
+		expect 2 additional cores per chip per year.
+		SIMD width to double every4 years
+		Potential speedup from SIMD to be twice that from MIMD.
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Graphics Processing Unit %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+GPU
+	CUDA can run parallelism with CPU (scaler) and GPU (vector)
+		GPU is changing so we don't write directly as CUDA language
+	Programming model: SIMD (Single Instruciton Muliple Thread)
+	
+GPU Architecture
+
+	grid: math that can be done in parallel (multiple blocks)
+		blocks: 
+			thread:
+
+example:
+	NVIDIA GPU has 32,768 registers
+		divided into lanes
+		Each
+
+GPU: problems over the years (NVIDIA)
+	2008 (Tesla): CUDA
+	2010 (Fermi): FP64 
+		32bit vs 64bit floating is not that much differences at this point.
+	2012 (Kepler): Dynamic Parallelism
+	2014 (Maxwell): Higher Performance / Watt
+		power/freq = exponential	
+	2016 (Pascal): Unified Memory Stacked DRAM 
+	2017 (Volta)
+	2018 (Turing)
+	Every wire has capacitor problem
+
+NVIDIA Instruciton Set Architecture
+	ISA is an abstraction of the hardware instruction sets
+		Parallel thread execution (PTX)
+		uses virtual registers
+		
+NVIDIA GPU Memory Structure
+	Each SIMD has their onw private section of off-chip DRAM
+		"Private Memory"
+		Contains stack frame, spilling registers, and private variables.
+	Each multithreaded SIMD processor also has local memory
+		Shared by SIMD lanes / threads within a block
+	Memory shared by SIMD processors is GPU memory
+		Host can read and write GPU memory
+	
+	if you have multiple GPU = multiple lanes x # of GPU (only increases by 10%, unless cryptomining)
+	
+Loop-Level Prallelism
 
 
+no if then on assm
 
 
+	
+ERROR CORRECTING CODE: instead of 16, send 18 bits to over correct themselves.
 
+	
+register spilling: we have more math than register so they need to put the data in the stack.
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%		FINAL		%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
+FINAL: we're emulating hardware
+	single core have 1 true answers
+	if you have single core instruciton the answers are solid, 
+	on multi-core, they need to compare them
+	trace file (wget to linux website) 500-1000 access (cache hit rate)
+	ways to evaulate cache file
+	fact based argument for tracefile.
+	cache simulator
+	std:: hex -> std::dec
+	
