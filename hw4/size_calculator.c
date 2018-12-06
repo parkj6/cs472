@@ -44,9 +44,10 @@ char* isNumber(char numb[]){
 	int i=0;
 	if (numb[0] == '-')
 		i=1;
-	for (; numb[i]!=0; i++){
+	for (; numb[i]!=0; ++i){
 		if(!isdigit(numb[i])){
 			return "Is NOT a number";
+			exit(1);
 		}
 		else
 			return "Is a number";
@@ -75,8 +76,8 @@ int argTest(int argc, char **argv){
 				printf("argv[%i]: %s\n", i, test);
 			}
 		}
-	}
 	return 0;
+	}
 }
 
 int main(int argc, char **argv){
@@ -91,10 +92,9 @@ int main(int argc, char **argv){
 	/* /DEBUG */
 
 	int test = argTest(argc, argv);
-	if (test<0){
+	if (test!=0){
 		return -1;
 	}
-
 	else{
 	/* Real fun begins here */
 		printf("blah");
@@ -105,10 +105,10 @@ int main(int argc, char **argv){
 		
 
 		if (DEBUG){
-			printf(	"Virtual:	%li-bits,\n"
-					"Physical:	%li-bits,\n"
-					"Memory:	%li-bytes.\n"
-					"Table:		%li-bits (0-bits by default).\n", va, pa, mem, size);
+			printf(	"Virtual:\t	%li-bits,\n"
+							"Physical:\t	%li-bits,\n"
+							"Memory:\t		%li-bytes.\n"
+							"Table:\t		%li-bits (0-bits by default).\n", va, pa, mem, size);
 		}
 
 		// Do some math here. 
