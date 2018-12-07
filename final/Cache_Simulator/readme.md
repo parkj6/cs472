@@ -8,10 +8,6 @@
 * replacement policies
 * write policies
 
-## Generated output contains:
-* # of cache misses, hits and evictions (# of block replacement)
-* Total # of clock cycle used during the simulation
-
 ## Assumptions
 1. Does not need to simulate actual data contents.
 	* Pretend data is copied from "main memory" and keep track of hypotetical elapsed time.
@@ -89,9 +85,14 @@ Output file written to [trace file].out
 1. the file path of a **configuration file** 
 2. the file path of a **trace file** containing a sequence of memory operations. 
 
+## Generated output contains:
+* No. of cache misses, hits and evictions (No. of block replacement)
+* Total no. of clock cycle used during the simulation
 * Cache simulator will output the following:
-	> \[operation address\],\[size\] \[number of cycles\] \[cache impact\]
-	* where \[cache impact\] indicates hit, miss or evictions.
+``` 
+[operation address],[size] [number of cycles] [cache impact]
+Hits: [no. of hits] Misses: [no. of misses] Evictions: [no. of evictions]
+Cycles: [no of total cycles simulated]
+```
+	* where [cache impact] indicates hit, miss or evictions.
 	* and it could contain up to 3 impacts.
-	> Hits: \[no. of hits\] Misses: \[no. of misses\] Evictions: \[no. of evictions\]
-	> Cycles: \[no of total cycles simulated\]
