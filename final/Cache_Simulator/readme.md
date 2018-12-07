@@ -88,3 +88,10 @@ Output file written to [trace file].out
 * Cache simulator requires 2 arguments on the command line:
 1. the file path of a **configuration file** 
 2. the file path of a **trace file** containing a sequence of memory operations. 
+
+* Cache simulator will output the following:
+	> \[operation address\],\[size\] \[number of cycles\] \[cache impact\]
+	* where \[cache impact\] indicates hit, miss or evictions.
+	* and it could contain up to 3 impacts.
+	> Hits: \[no. of hits\] Misses: \[no. of misses\] Evictions: \[no. of evictions\]
+	> Cycles: \[no of total cycles simulated\]

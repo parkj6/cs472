@@ -88,13 +88,13 @@
     <LocalRemoteCopySources>true</LocalRemoteCopySources>
     <RemoteBuildCommandLine>make</RemoteBuildCommandLine>
     <RemoteProjectDir>$(RemoteRootDir)</RemoteProjectDir>
-    <SourcesToCopyRemotelyOverride />
     <RemoteReBuildCommandLine>make clean; make</RemoteReBuildCommandLine>
     <RemoteCleanCommandLine>make clean</RemoteCleanCommandLine>
     <BuildCommandLine>echo Building...</BuildCommandLine>
     <RemoteBuildOutputs>$(RemoteProjectDir)/bin/cache_sim</RemoteBuildOutputs>
     <ReBuildCommandLine>echo Rebuilding...</ReBuildCommandLine>
     <CleanCommandLine>echo Cleaning...</CleanCommandLine>
+    <NMakeIncludeSearchPath>C:\TDM-GCC-64\lib\gcc\x86_64-w64-mingw32\5.1.0\include-fixed;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalRemoteCopySources>true</LocalRemoteCopySources>

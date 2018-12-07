@@ -9,8 +9,11 @@
 #include <fstream>
 #include <regex>
 #include <cmath>
+#include <list>
 
 using namespace std;
+
+int debug = 1;
 
 CacheController::CacheController(ConfigInfo ci, char* tracefile) {
 	// store the configuration info
@@ -18,8 +21,8 @@ CacheController::CacheController(ConfigInfo ci, char* tracefile) {
 	this->inputFile = string(tracefile);
 	this->outputFile = this->inputFile + ".out";
 	// compute the other cache parameters
-	this->numByteOffsetBits = log2(ci.blockSize);
-	this->numSetIndexBits = log2(ci.numberSets);
+	this->numByteOffsetBits = log2(ci.blockSize);	//offset bits
+	this->numSetIndexBits = log2(ci.numberSets);	//index bits
 	// initialize the counters
 	this->globalCycles = 0;
 	this->globalHits = 0;
@@ -27,19 +30,20 @@ CacheController::CacheController(ConfigInfo ci, char* tracefile) {
 	this->globalEvictions = 0;
 	
 	// create your cache structure
-	// ...
+	this->myCache.resize(ci.numberSets);
+	for (unsigned int i = 0; i < this->ci.numberSets; i++) {	//vector
+		for (unsigned int j = 0; j < this->ci.associativity; j++) {	//list
+			CacheBlock tempBlock;	//block
+			tempBlock.dirty = 0;
+			tempBlock.valid = 0;
+			tempBlock.tag = 0;
+			this->myCache[i].push_back(tempBlock);
+		}
+	}
 
 	// manual test code to see if the cache is behaving properly
 	// will need to be changed slightly to match the function prototype
-	/*
-	cacheAccess(false, 0);
-	cacheAccess(false, 128);
-	cacheAccess(false, 256);
-
-	cacheAccess(false, 0);
-	cacheAccess(false, 128);
-	cacheAccess(false, 256);
-	*/
+	// cacheAccess(&response, false, 0);
 }
 
 /*
@@ -60,7 +64,7 @@ void CacheController::runTracefile() {
 
 	// open the output file
 	ofstream outfile(outputFile);
-	// open the output file
+	// open the input file
 	ifstream infile(inputFile);
 	// parse each line of the file and look for commands
 	while (getline(infile, line)) {
@@ -124,7 +128,11 @@ void CacheController::runTracefile() {
 */
 CacheController::AddressInfo CacheController::getAddressInfo(unsigned long int address) {
 	AddressInfo ai;
+
 	// this code should be changed to assign the proper index and tag
+	ai.tag = address >> numSetIndexBits >> numByteOffsetBits;
+	ai.setIndex = (address - (ai.tag << numByteOffsetBits << numSetIndexBits)) >> numByteOffsetBits;
+
 	return ai;
 }
 
@@ -136,15 +144,61 @@ void CacheController::cacheAccess(CacheResponse* response, bool isWrite, unsigne
 	// determine the index and tag
 	AddressInfo ai = getAddressInfo(address);
 
+	// If Replacement Policy is LRU
+	if (this->ci.rp == ReplacementPolicy::LRU) {
+		//LRU
+		unsigned int end = this->ci.associativity;
+		for (unsigned int i = 0; i < end; i++) {
+			list<CacheBlock>::iterator it;
+			list<int>::iterator lastv;
+
+			//if (&myCache.valid) { //hit
+			if (isWrite) { //hit
+				response->hit = true;
+			}
+
+			else { //miss
+				/*lastv = myCache[i].end();
+				for (auto x : myCache[i]) {
+					++lastv;
+				}
+				myCache[i].splice(myCache[i].begin(), myCache[i], lastv);*/
+				myCache[i].end()->valid = true;
+				//this->myCache[end]->valid = true;
+				myCache[i].end()->tag = ai.tag;
+				//this->myCache[end]->tag = ai.tag;
+				response->hit = false;
+				response->eviction = true;
+				globalMisses++;
+
+				if (it->dirty) { //dirty
+					response->dirtyEviction = true;
+				}
+			}
+		}
+	}
+
+	if (debug){
+		//Just to see the Valid, Dirty, Tag of each block
+		for (unsigned int i = 0; i < this->ci.numberSets; i++) {
+			cout << "Index[" << i << "]";
+			list<CacheBlock>::iterator it;
+			for (it = myCache[i].begin(); it != this->myCache[i].end(); ++it) {
+				cout << " V:" << it->valid << " D:" << it->dirty << " T:" << it->tag << "\t";
+			}
+			cout << endl;
+		}
+	}
 	cout << "\tSet index: " << ai.setIndex << ", tag: " << ai.tag << endl;
-	
+
 	// your code needs to update the global counters that track the number of hits, misses, and evictions
 
-	if (response->hit)
+	if (response->hit) {
 		cout << "Address " << std::hex << address << " was a hit." << endl;
-	else
+	}
+	else {
 		cout << "Address " << std::hex << address << " was a miss." << endl;
-
+	}
 	cout << "-----------------------------------------" << endl;
 
 	return;
@@ -157,4 +211,17 @@ void CacheController::cacheAccess(CacheResponse* response, bool isWrite, unsigne
 void CacheController::updateCycles(CacheResponse* response, bool isWrite) {
 	// your code should calculate the proper number of cycles
 	response->cycles = 0;
+	//response->hit = 0;
+	//response->eviction = 0;
+	//response->dirtyEviction = 0;
 }
+
+/*
+	This will update the information on cache response's hit, miss or eviction
+	used in LRU
+*/
+void CacheController::updateCount(CacheResponse* response, bool isWrite, unsigned long int address) {
+
+
+}
+

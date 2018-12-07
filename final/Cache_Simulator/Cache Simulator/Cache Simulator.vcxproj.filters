@@ -1,17 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="J:\finalproj\src\CacheSimulator.cpp" />
-    <ClCompile Include="J:\finalproj\src\CacheController.cpp">
-      <Filter>Cache Building Blocks</Filter>
-    </ClCompile>
+    <ClCompile Include="..\finalproj\src\CacheController.cpp" />
+    <ClCompile Include="..\finalproj\src\CacheSimulator.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="J:\finalproj\src\CacheSimulator.h" />
-    <ClInclude Include="J:\finalproj\src\CacheController.h">
-      <Filter>Cache Building Blocks</Filter>
-    </ClInclude>
-    <ClInclude Include="J:\finalproj\src\CacheStuff.h" />
+    <ClInclude Include="..\finalproj\src\CacheController.h" />
+    <ClInclude Include="..\finalproj\src\CacheSimulator.h" />
+    <ClInclude Include="..\finalproj\src\CacheStuff.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Cache Building Blocks">

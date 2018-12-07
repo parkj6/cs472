@@ -42,4 +42,11 @@ struct CacheResponse {
 	unsigned int cycles; // how many clock cycles did this operation take?
 };
 
+// This structure contains the bits used to determine CacheResponse
+struct CacheBlock {
+	bool valid;
+	bool dirty;
+	unsigned int tag;
+};
+
 #endif //CACHESTUFF
